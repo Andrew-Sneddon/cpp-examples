@@ -14,7 +14,7 @@ int main()
     // Time and step size parameters 
 
     double tend = 24; // total time to run for (hrs) 
-    int tsteps = 1000, itt = 1; // number of time steps, itteration count
+    int tsteps = tend*60, itt = 1; // number of time steps, itteration count
     double h = tend / tsteps;
     double h2 = h / 2;
 
@@ -43,8 +43,8 @@ int main()
 
     // Initiate and define parameters and variables \\
 
-    double R1 = 3.31E-2, R3 = 0.0001, s = 0.09, e = 0.01, mu1 = 0.125, mu2 = 0.7, z1 = 0.8,
-    z2 = 0.1, beta = 0.0001, Ke = 0.63 / 12, delta = 0.01, kapa = 10e3, test = -1;
+    double R1 = 0.1/1440, R3 = 0.0001, s = 0.09, e = 0.01 / 1440, mu1 = 0.07 / 1440, mu2 = 0.4 / 1440, z1 = 0.8,
+    z2 = 0.1, beta = 0.0001 / 1440, Ke = 0.63 / 12, delta = 0.05, kapa = 10e3, test = -1;
     double m11, m12, m13, m21, m22, m23, m31, m32, m33, m41, m42, m43;
     double n11, n12, n13, n21, n22, n23, n31, n32, n33, n41, n42, n43;
     double  temp1, temp2, temp3, temp4, temp5, temp6, temp7;
@@ -137,19 +137,23 @@ int main()
         {
             temp[j] = -1 * L3[j] / (2 * kapa);
 
-            for (int jj = 0; jj < tsteps; jj++) // 
+            for (int jj = 0; jj < tsteps; jj++) // check that u is between 0 and 50 (no neg conc, known max conc) 
             {
-        
-                if (temp[jj] > 1000)
+                if (temp[jj] < 0)
+                    u1[jj] = 0;
+                else
+                    u1[jj] = temp[jj];
 
-                    u1[jj] = 1000;
+                if (temp[jj] > 50)
+
+                    u1[jj] = 50;
 
                 else
 
                     u1[jj] = temp[jj];
-
             }
-            u[j] = 0.5 * (u1[j] + Ou[j]);
+
+            u[j] = 0.5 * (u1[j] + Ou[j]); // can use exponential weighting if not converging 
         }
 
         // Calculate the error for u, T, I, X 
