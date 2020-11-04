@@ -19,7 +19,6 @@ int main()
     double h2 = h / 2;
 
     // Initialise vectors to store solutions \\ 
-
     vector<double> T(tsteps + 1); // Vector of tumor diameter at all times 
     vector<double> I(tsteps + 1); // Vector of infiltrating lymphocytes
     vector<double> X(tsteps + 1); // Concentration of drug 
@@ -44,17 +43,18 @@ int main()
 
     // Initiate and define parameters and variables \\
 
-    double R1 = 3.31E-2, R3 = 0.0001, s = 0.09, e = 0.09, mu1 = 0.125, mu2 = 0.7, z1 = 0.8,
-        z2 = 0.1, beta = 0.0001, Ke = 0.63/12, delta = 0.1, kapa = 10e4, test = -1;
+    double R1 = 3.31E-2, R3 = 0.0001, s = 0.09, e = 0.01, mu1 = 0.125, mu2 = 0.7, z1 = 0.8,
+    z2 = 0.1, beta = 0.0001, Ke = 0.63 / 12, delta = 0.01, kapa = 10e3, test = -1;
     double m11, m12, m13, m21, m22, m23, m31, m32, m33, m41, m42, m43;
     double n11, n12, n13, n21, n22, n23, n31, n32, n33, n41, n42, n43;
     double  temp1, temp2, temp3, temp4, temp5, temp6, temp7;
     double sumu = 0, sumT = 0, sumX = 0, sumI = 0, sumL1 = 0, sumL2 = 0, sumL3 = 0, sumOu = 0,
         sumOT = 0, sumOX = 0, sumOI = 0, sumOL1 = 0, sumOL2 = 0, sumOL3 = 0;
 
-    // Main bit we run through 
-    while (test < 0)
-    {
+    // Main bit we run through  \\ 
+    while (test < 0) // keep itterating until condition is met 
+
+    {   // Save old data for error computation to see if the stop criteria has been met
         OT = T;
         OI = I;
         OX = X;
@@ -96,7 +96,7 @@ int main()
         // Calculate the error for u, T, I, X 
         for (int ii = 0; ii < tsteps; ii++) //loop through time for Adjoint ODE 
         {
-            int  j = tsteps + 1 - ii; // for backward RK4 sceme 
+            int  j = tsteps - ii; // for backward RK4 sceme 
 
             n11 = -(1 + L1[j]) * (R1 - e * (I[j] - s)) / pow((I[j] + s * T[j]), 2) - mu1 * (1 + (z1 * X[j]) / (1 + X[j])) + L2[j] * (beta + R3 * (I[j] - s) / pow((I[j] + s * T[j]), 2));
             n12 = -(L1[j] - e * ((T[j] - 1) / pow(I[j] + s * T[j], 2)) + L2[j] * R3 * e * T[j] * I[j] / (I[j] + s * T[j]) + R3 * I[j] * e * (T[j] - 1) / pow(I[j] + s * T[j], 2) - mu2 * (1 + z2 * X[j] / (1 + X[j])));
@@ -129,20 +129,27 @@ int main()
             L1[j - 1] = L1[j] - (h / 6) * (n11 + 2 * n21 + 2 * n31 + n41);
             L2[j - 1] = L2[j] - (h / 6) * (n12 + 2 * n22 + 2 * n32 + n42);
             L3[j - 1] = L3[j] - (h / 6) * (n13 + 2 * n23 + 2 * n33 + n43);
+            
+
         }
 
         for (int j = 0; j < tsteps; j++) //Calculate 'u' for this itteration
         {
-            temp[j] = -1 * L3[j] / (kapa);
+            temp[j] = -1 * L3[j] / (2 * kapa);
 
-            for (int jj = 0; jj < 7; jj++) // find min val in temp array 
+            for (int jj = 0; jj < tsteps; jj++) // 
             {
-                if (u1[jj] > 50)
-                    u1[jj] = 50;
+        
+                if (temp[jj] > 1000)
+
+                    u1[jj] = 1000;
+
                 else
-                    u1[jj] = 50; 
+
+                    u1[jj] = temp[jj];
+
             }
-            u[j] = 0.5 * (u[j] + Ou[j]);
+            u[j] = 0.5 * (u1[j] + Ou[j]);
         }
 
         // Calculate the error for u, T, I, X 
@@ -164,7 +171,7 @@ int main()
             sumOL3 += abs(OL3[iii]);
 
         }
-        
+
 
         temp1 = delta * sumu - sumOu;
         temp2 = delta * sumT - sumOT;
@@ -184,20 +191,20 @@ int main()
             else
                 min = min;
         }
+
         test = min;
 
-        cout << " Min val =  " << test << "\n";
-        if (itt > 10) // ensure we don't get stuck in infinite while loop
+        cout << "\n" << " Itteration number  " << itt << "\n";
+        cout << "\n" << "Min val =  " << test << "\n";
+
+        if (itt > 500) // ensure we don't get stuck in infinite while loop
         {
             test = 2;
         }
-        cout << " Itteration number  " << itt << "\n";
+       
         itt = itt + 1; // keep track of the number of itterations
-        cout  << temp1 << "\n" << temp2 << "\n" << temp3 << "\n" << temp4 << "\n" << temp5 << "\n" << temp6 << "\n" << temp7;
 
-   
+        cout << temp1 << "\n" << temp2 << "\n" << temp3 << "\n" << temp4 << "\n" << temp5 << "\n" << temp6 << "\n" << temp7;
 
-        
     }
 }
-
